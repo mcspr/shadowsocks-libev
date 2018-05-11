@@ -3,8 +3,13 @@ USE_SYSTEM_LIB ?= 0
 BUILD_DIR = $(realpath rpm)
 SPEC_PATH = $(BUILD_DIR)/SPECS/shadowsocks-libev.spec
 
+HAS_GIT := $(shell command -v git 2> /dev/null)
+ifndef HAS_GIT
 deps:
 	dnf -y install git
+else
+deps:
+endif
 
 export-git-version: deps
 	$(eval GIT_VERSION_CHUNKS=$(shell scripts/git-version))
