@@ -11,7 +11,7 @@ export TARGET_TARBALL_NAME=shadowsocks-libev-${TARGET_VERSION}
 export TARGET_TARBALL_DIR="${HERE}"/..
 
 archive() {
-    cd "${TARGET_TARBALL_DIR}"
+    cd "${HERE}"/..
     # archive this repo
     git archive HEAD --format=tar --prefix="${TARGET_TARBALL_NAME}/" \
         -o "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar"
@@ -29,12 +29,15 @@ archive() {
     rm "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar"
 }
 
-while getopts "an" opt
+while getopts "ano:" opt
 do
     case ${opt} in
         a)
             archive
             exit 0
+            ;;
+        o)
+            TARGET_TARBALL_DIR=$OPTARG
             ;;
         n)
             echo -n "${TARGET_TARBALL_NAME}.tar.gz"
