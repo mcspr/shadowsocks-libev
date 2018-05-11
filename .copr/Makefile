@@ -21,6 +21,7 @@ $(SPEC_PATH): $(SPEC_PATH).in
 srpm: deps git-archive $(SPEC_PATH)
 	rpmbuild -bs $(SPEC_PATH) \
 	    --define "%_topdir $(BUILD_DIR)" \
+	    --define "%_srcrpmdir $(outdir)" \
 	    --define "%use_system_lib $(USE_SYSTEM_LIB)"
 
 all: srpm
