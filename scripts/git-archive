@@ -11,7 +11,7 @@ export TARGET_TARBALL_NAME=shadowsocks-libev-${TARGET_VERSION}
 export TARGET_TARBALL_DIR="${HERE}"/..
 
 archive() {
-    cd "${HERE}"/..
+    cd $(git rev-parse --show-toplevel)
     # archive this repo
     git archive HEAD --format=tar --prefix="${TARGET_TARBALL_NAME}/" \
         -o "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar"
