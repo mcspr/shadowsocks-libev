@@ -26,7 +26,7 @@ git-archive: export-git-version
 $(SPEC_PATH): $(SPEC_PATH).in export-git-version
 	sed -e "s/@VERSION@/$(GIT_VERSION)/" \
 	    -e "s/@RELEASE@/1.$(GIT_COMMITS).git$(GIT_SHA1)/" \
-	    -e "s/@SOURCE@/$(GIT_ARCHIVE)/" \
+	    -e "s/@SOURCE@/$(GIT_ARCHIVE).tar.gz/" \
 	$< > $@
 
 srpm: deps git-archive $(SPEC_PATH)
