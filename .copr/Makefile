@@ -14,7 +14,7 @@ BUILD_DIR = rpm
 SPEC_PATH = $(BUILD_DIR)/SPECS/shadowsocks-libev.spec
 
 deps:
-	dnf -y install git
+	dnf -y install git rpm-build
 
 rpm/SOURCES/$(GIT_ARCHIVE):
 	scripts/git-archive -a
