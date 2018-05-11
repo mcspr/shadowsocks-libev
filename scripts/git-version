@@ -4,7 +4,6 @@ set -e
 # determine version and release number
 GIT_DESCRIBE=$(git describe --tags --match 'v*' --long)
 # GIT_DESCRIBE is like v3.0.3-11-g1e3f35c-dirty
-
 if [[ ! "$GIT_DESCRIBE" =~ ^v([^-]+)-([0-9]+)-g([0-9a-f]+)$ ]]; then
     >&2 echo 'ERROR - unrecognized `git describe` output: '"$GIT_DESCRIBE"
     exit 1
@@ -14,11 +13,27 @@ TARGET_VERSION=${BASH_REMATCH[1]}
 TARGET_COMMITS=${BASH_REMATCH[2]}
 TARGET_SHA1=${BASH_REMATCH[3]}
 
-TARGET_RELEASE=1
 if [ "$TARGET_COMMITS" -gt 0 ]; then
-    TARGET_RELEASE+=".$TARGET_COMMITS.git$TARGET_SHA1"
+    OUTPUT="${TARGET_VERSION}-${TARGET_COMMITS}.git${TARGET_SHA1}"
+else
+    OUTPUT="${TARGET_VERSION}"
 fi
 
-TARGET_VERREL=$TARGET_VERSION-$TARGET_RELEASE
+while getopts "brf" opt
+do
+    case ${opt} in
+        b)
+            echo "${TARGET_VERSION}"
+            exit 0
+            ;;
+        r)
+            echo "${TARGET_COMMITS}.git${TARGET_SHA1}"
+            exit 0
+            ;;
+        f)
+            echo "${OUTPUT}"
+            exit 0
+            ;;
+    esac
+done
 
-echo -n ${TARGET_VERREL}

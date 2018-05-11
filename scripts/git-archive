@@ -4,30 +4,41 @@ set -e
 SELF=$(readlink -f -- "$0")
 HERE=$(dirname -- "${SELF}")
 
-TARGET_VERSION=$("${HERE}"/git-version)
+TARGET_VERSION=$("${HERE}"/git-version -f)
 
 # archive tarball from Git workspace into repository root
 export TARGET_TARBALL_NAME=shadowsocks-libev-${TARGET_VERSION}
 export TARGET_TARBALL_DIR="${HERE}"/..
 
-export TARGET_TARBALL
+archive() {
+    cd "${TARGET_TARBALL_DIR}"
+    # archive this repo
+    git archive HEAD --format=tar --prefix="${TARGET_TARBALL_NAME}/" \
+        -o "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar"
+    # archive submodules
+    git submodule update --init
+    git submodule foreach --quiet 'git archive HEAD --format=tar \
+            --prefix="${TARGET_TARBALL_NAME}/${path}/" \
+            -o "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}-submodule-${path}-${sha1}.tar"
+        tar -n --concatenate --file="${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar" \
+            "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}-submodule-${path}-${sha1}.tar"'
+    gzip -c "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar" > "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar.gz"
+    
+    # clean-up
+    git submodule foreach --quiet 'rm ${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}-submodule-${path}-${sha1}.tar'
+    rm "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar"
+}
 
-pushd "${TARGET_TARBALL_DIR}"
-# archive this repo
-git archive HEAD --format=tar --prefix="${TARGET_TARBALL_NAME}/" \
-    -o "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar"
-# archive submodules
-git submodule update --init
-git submodule foreach --quiet 'echo "packaging ${path}"
-    git archive HEAD --format=tar \
-        --prefix="${TARGET_TARBALL_NAME}/${path}/" \
-        -o "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}-submodule-${path}-${sha1}.tar"
-    tar -n --concatenate --file="${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar" \
-        "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}-submodule-${path}-${sha1}.tar"'
-gzip -c "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar" > "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar.gz"
-
-# clean-up
-git submodule foreach --quiet 'rm ${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}-submodule-${path}-${sha1}.tar'
-rm "${TARGET_TARBALL_DIR}/${TARGET_TARBALL_NAME}.tar"
-
-popd
+while getopts "an" opt
+do
+    case ${opt} in
+        a)
+            archive
+            exit 0
+            ;;
+        n)
+            echo -n "${TARGET_TARBALL_NAME}.tar.gz"
+            exit 0
+            ;;
+    esac
+done
