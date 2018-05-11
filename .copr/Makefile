@@ -6,16 +6,22 @@ SPEC_PATH = $(BUILD_DIR)/SPECS/shadowsocks-libev.spec
 deps:
 	dnf -y install git
 
-git-archive:
-	scripts/git-archive -o $(BUILD_DIR)/SOURCES/ -a
+export-git-version: deps
+	$(eval GIT_VERSION_CHUNKS=$(shell scripts/git-version))
 
-$(SPEC_PATH): $(SPEC_PATH).in
-	GIT_ARCHIVE=$(shell scripts/git-archive -n) ;\
-	GIT_VERSION=$(shell scripts/git-version -b) ;\
-	GIT_REVISION=$(shell scripts/git-version -r) ;\
-	sed -e "s/@VERSION@/$$GIT_VERSION/" \
-	    -e "s/@RELEASE@/$$GIT_REVISION/" \
-	    -e "s/@SOURCE@/$$GIT_ARCHIVE/" \
+	$(eval GIT_VERSION=$(word 1,$(GIT_VERSION_CHUNKS)))
+	$(eval GIT_COMMITS=$(word 2,$(GIT_VERSION_CHUNKS)))
+	$(eval GIT_SHA1=$(word 3,$(GIT_VERSION_CHUNKS)))
+
+	$(eval GIT_ARCHIVE=shadowsocks-libev-$(GIT_VERSION))
+
+git-archive: export-git-version
+	scripts/git-archive -o $(BUILD_DIR)/SOURCES/ -n $(GIT_ARCHIVE)
+
+$(SPEC_PATH): $(SPEC_PATH).in export-git-version
+	sed -e "s/@VERSION@/$(GIT_VERSION)/" \
+	    -e "s/@RELEASE@/1.$(GIT_COMMITS).git$(GIT_SHA1)/" \
+	    -e "s/@SOURCE@/$(GIT_ARCHIVE)/" \
 	$< > $@
 
 srpm: deps git-archive $(SPEC_PATH)
@@ -26,4 +32,4 @@ srpm: deps git-archive $(SPEC_PATH)
 
 all: srpm
 
-.PHONY: deps srpm all
+.PHONY: export-git-version git-archive deps srpm all
