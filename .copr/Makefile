@@ -18,9 +18,11 @@ $(SPEC_PATH): $(SPEC_PATH).in
 	    -e "s/@SOURCE@/$$GIT_ARCHIVE/" \
 	$< > $@
 
-srpm: deps git-archive $(SPEC_PATH):
+srpm: deps git-archive $(SPEC_PATH)
 	rpmbuild -bs $(SPEC_PATH) \
 	    --define "%_topdir $(BUILD_DIR)" \
 	    --define "%use_system_lib $(USE_SYSTEM_LIB)"
 
-.PHONY: deps srpm
+all: srpm
+
+.PHONY: deps srpm all
