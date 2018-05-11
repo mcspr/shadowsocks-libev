@@ -13,6 +13,9 @@ USE_SYSTEM_LIB ?= 0
 BUILD_DIR = rpm
 SPEC_PATH = $(BUILD_DIR)/SPECS/shadowsocks-libev.spec
 
+deps:
+	dnf -y install git
+
 rpm/SOURCES/$(GIT_ARCHIVE):
 	scripts/git-archive -a
 	cp $(GIT_ARCHIVE) rpm/SOURCES/
@@ -23,9 +26,9 @@ $(SPEC_PATH): $(SPEC_PATH).in
 	    -e "s/@SOURCE@/$(GIT_ARCHIVE)/" \
 	$< > $@
 
-srpm: $(SPEC_PATH) rpm/SOURCES/$(GIT_ARCHIVE)
+srpm: deps $(SPEC_PATH) rpm/SOURCES/$(GIT_ARCHIVE)
 	rpmbuild -bs $(SPEC_PATH) \
 	    --define "%_topdir $(BUILD_DIR)" \
 	    --define "%use_system_lib $(USE_SYSTEM_LIB)"
 
-.PHONY: srpm
+.PHONY: deps srpm
