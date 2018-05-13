@@ -1,25 +1,46 @@
-function ss_git_version {
+function ss_git_describe {
     declare describe=$(git describe --tags --match 'v*' --long)
     if [[ ! "${describe}" =~ ^v([^-]+)-([0-9]+)-g([0-9a-f]+)$ ]]; then
         log_error 'ERROR - unrecognized `git describe` output: '"${describe}"
         return 1
     fi
 
-    declare version=${BASH_REMATCH[1]}
-    declare commits=${BASH_REMATCH[2]}
-    declare short_hash=${BASH_REMATCH[3]}
+    version=${BASH_REMATCH[1]}
+    commits=${BASH_REMATCH[2]}
+    short_hash=${BASH_REMATCH[3]}
 
-    if [ "${commits}" -eq 0 ] ; then
-        output "${version}"
+    output "${version} ${commits} ${short_hash}"
+}
+
+function ss_git_version {
+    declare describe="$(ss_git_describe)"
+    output "$(echo ${describe} | cut -d' ' -f1)"
+}
+
+function ss_git_release {
+    declare describe="$(ss_git_describe)"
+
+    commits=$(echo "${describe}" | cut -d' ' -f2)
+    if [ "${commits}" = 0 ] ; then
+        output "1"
         return
     fi
 
-    output "${version}.${commits}.git${short_hash}"
+    short_hash=$(echo "${describe}" | cut -d' ' -f3)
+    output "${commits}.git${short_hash}"
+}
+
+function ss_git_name_version {
+    output "$(cached git_name)-$(cached ss_git_version)-$(cached ss_git_release)"
+}
+
+function ss_git_setup_macro {
+    output "%setup -q -n $(ss_git_name_version)"
 }
 
 function ss_git_archive {
     declare top=$(git rev-parse --show-toplevel) 
-    declare -x source_name=$(cached git_name)-$(cached ss_git_version)
+    declare -x source_name=$(ss_git_name_version)
 
     if [ -z "${OUTDIR}" ] ; then
         log_debug "OUTDIR is not set. No action taken."

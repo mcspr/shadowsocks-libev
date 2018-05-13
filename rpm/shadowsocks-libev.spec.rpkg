@@ -16,7 +16,7 @@
 
 Name:		    {{{ git_name }}}
 Version:	    {{{ ss_git_version }}}
-Release:	    1%{?dist}
+Release:	    {{{ ss_git_release }}}%{?dist}
 Summary:	    A lightweight and secure socks5 proxy
 
 Group:		    Applications/Internet
@@ -49,7 +49,7 @@ BuildRequires:   systemd
 %{?project_desc}
 
 %prep
-{{{ git_setup_macro }}}
+{{{ ss_git_setup_macro }}}
 
 %build
 ./autogen.sh
