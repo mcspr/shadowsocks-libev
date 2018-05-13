@@ -1,5 +1,5 @@
 deps:
-	dnf -y install rpkg
+	dnf -y install rpkg git
 
 srpm: deps
 	rpkg --path rpm/ srpm --outdir $(outdir)
