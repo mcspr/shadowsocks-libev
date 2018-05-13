@@ -206,4 +206,4 @@ zsh completion files for shadowsocks-libev.
 %{_datadir}/zsh/site-functions/*
 
 %changelog
-{{{ git_changelog }}}
+
