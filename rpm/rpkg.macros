@@ -1,0 +1,49 @@
+function ss_git_version {
+    declare describe=$(git describe --tags --match 'v*' --long)
+    if [[ ! "${describe}" =~ ^v([^-]+)-([0-9]+)-g([0-9a-f]+)$ ]]; then
+        log_error 'ERROR - unrecognized `git describe` output: '"${describe}"
+        return 1
+    fi
+
+    declare version=${BASH_REMATCH[1]}
+    declare commits=${BASH_REMATCH[2]}
+    declare short_hash=${BASH_REMATCH[3]}
+
+    if [ "${commits}" -eq 0 ] ; then
+        output "${version}"
+        return
+    fi
+
+    output "${version}.${commits}.git${short_hash}"
+}
+
+function ss_git_archive {
+    declare top=$(git rev-parse --show-toplevel) 
+    declare -x source_name=$(cached git_name)-$(cached ss_git_version)
+
+    if [ -z "${OUTDIR}" ] ; then
+        log_debug "OUTDIR is not set. No action taken."
+        output "${source_name}.tar.gz"
+        return
+    fi
+
+    declare -x outdir="${OUTDIR}"
+
+    git -C "${top}" archive HEAD --format=tar --prefix="${source_name}/" \
+        -o "${outdir}/${source_name}.tar"
+
+    # package submodules inside git archive tarball
+    git -C "${top}" submodule update --init
+    git -C "${top}" submodule foreach --quiet 'git archive HEAD --format=tar \
+            --prefix="${source_name}/${path}/" \
+            -o "${outdir}/${source_name}-submodule-${path}-${sha1}.tar"
+        tar -n --concatenate --file="${outdir}/${source_name}.tar" \
+            "${outdir}/${source_name}-submodule-${path}-${sha1}.tar"'
+
+    # compress resulting source file
+    gzip -c "${outdir}/${source_name}.tar" > "${outdir}/${source_name}.tar.gz"
+
+    output "${source_name}.tar.gz"
+}
+
+# vim:ft=sh
